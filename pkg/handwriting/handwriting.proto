@@ -1,0 +1,60 @@
+syntax = 'proto3';
+package handwriting;
+option go_package = "github.com/trymoose/pkg/handwriting/internal/handwriting";
+
+message BaseMessage {
+  // Milliseconds since 2001-01-01 UTC.
+  sfixed64 CreatedAt = 2;
+  string ID = 3;
+  Handwriting Handwriting = 4;
+}
+
+enum Compression {
+  Unknown = 0;
+  None = 1;
+  XZ = 4;
+}
+
+// int16 is little endian.
+// To decode the value xor it with 0x8000
+message Handwriting {
+  // struct {
+  //   Width int16
+  //   Height int16
+  // }
+  // Handwriting ribbon size? Seems like the size used when sending via SMS.
+  bytes Size = 2;
+  // struct {
+  //   Origin struct {
+  //     X int16
+  //     Y int16
+  //   }
+  //   Size struct {
+  //     Width int16
+  //     Height int16
+  //   }
+  // }
+  // Box fits the provided points
+  bytes Frame = 3;
+  // Number of arrays in Strokes
+  int64 StrokesCount = 4;
+  // If compressed, DecompressedLength is set.
+  Compression Compression = 5;
+  // If DataType is Compressed, size of decompressed data
+  optional int64 DecompressedLength = 6;
+  // Not sure this is correct
+  // Always 4
+  int64 Version = 7;
+  // Either compressed payload or raw data.
+  // In raw form it is in this format:
+  // [StrokesCount]struct{
+  //    Count uint16
+  //    Elems [Count]struct{
+  //      X        int16
+  //      Y        int16
+  //      Speed    int16 // Not sure
+  //      Pressure int16 // Not sure, always -1
+  //    }
+  // }
+  bytes Strokes = 8;
+}
